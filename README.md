@@ -15,6 +15,7 @@ This project demonstrates a production-style SRE workflow:
 - retry and timeout behavior
 - structured JSON logs
 - Prometheus metrics
+- provisioned Grafana dashboard
 - health and readiness probes
 
 ## Requirements
@@ -79,6 +80,12 @@ Prometheus:
 http://localhost:9090
 ```
 
+Grafana dashboard:
+
+```txt
+http://localhost:3000/d/certificate-inspector-overview/certificate-inspector-overview
+```
+
 Health probes:
 
 ```txt
@@ -98,6 +105,8 @@ make test
 
 Logs are emitted as structured JSON to stdout. Metrics are exposed in Prometheus format at `/metrics`.
 
+Grafana is provisioned automatically with a Prometheus datasource and a `Certificate Inspector Overview` dashboard. Anonymous viewer access is enabled for local review only.
+
 The current worker uses a bounded in-memory queue. This keeps local operation simple, but queued jobs are lost if the process exits before they are processed.
 
 ## Known Tradeoffs
@@ -108,6 +117,7 @@ The current worker uses a bounded in-memory queue. This keeps local operation si
 - Authentication is intentionally out of scope.
 - Distributed tracing and Kubernetes manifests are intentionally out of scope.
 - TLS verification is enabled by default; internal self-signed certificates would need an explicit future option.
+- Grafana is configured for local review convenience, not hardened production access.
 
 ## What I Would Improve With 2-4 More Hours
 
@@ -116,4 +126,4 @@ The current worker uses a bounded in-memory queue. This keeps local operation si
 - More complete retry classification for transient network failures.
 - API, store, and worker tests for the main paths.
 - OpenTelemetry tracing.
-- Grafana dashboard and alert rules.
+- Grafana alert rules.

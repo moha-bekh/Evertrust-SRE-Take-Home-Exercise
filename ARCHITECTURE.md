@@ -35,13 +35,17 @@ Certificate inspection is small enough to implement cleanly and relevant to PKI 
 
 ### Observability
 
-The service exposes structured logs, Prometheus metrics, and health probes. This gives operators answers to basic questions:
+The service exposes structured logs, Prometheus metrics, health probes, and a provisioned Grafana dashboard. This gives operators answers to basic questions:
 
 - Is the API receiving traffic?
 - Is the database reachable?
 - Are jobs being accepted?
 - Are jobs completing or failing?
 - How long do requests take?
+- Is the worker queue building up?
+- Are certificate inspections succeeding or failing?
+
+Grafana is intentionally provisioned through files under `ops/grafana` so the local run experience is reproducible. The dashboard uses low-cardinality service metrics and avoids hostname labels.
 
 ## Reliability Behavior
 
@@ -61,6 +65,7 @@ Graceful shutdown stops the HTTP server and lets the worker stop through context
 - No auth is included because the exercise focuses on service behavior and operability.
 - Certificate failure classification is currently coarse.
 - Hostname labels are avoided in metrics to prevent high-cardinality series.
+- Grafana anonymous access is enabled only to reduce friction for local review.
 
 ## Future Improvements
 
@@ -69,5 +74,5 @@ Graceful shutdown stops the HTTP server and lets the worker stop through context
 - Retry only transient-looking network failures.
 - More complete tests around API behavior, store behavior, and worker retries.
 - OpenTelemetry traces and structured correlation IDs.
-- Grafana dashboard and Prometheus alert rules.
+- Grafana and Prometheus alert rules.
 - Explicit disabled-by-default option for internal/self-signed certificates.
