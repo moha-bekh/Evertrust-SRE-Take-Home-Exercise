@@ -161,6 +161,32 @@ http://localhost:8080/readyz
 task test
 ```
 
+Run focused tests when you want to show a specific behavior:
+
+```bash
+task test:edge-cases
+task test:validation
+task test:idempotency
+task test:status
+task test:retries
+task test:failures
+task test:network
+task test:timeout
+```
+
+With the Docker stack running, you can also exercise API-level scenarios:
+
+```bash
+task scenario:edge-cases
+task scenario:validation
+task scenario:idempotency
+task scenario:result-before-completion
+task scenario:network-failure
+task scenario:timeout
+```
+
+`scenario:network-failure` defaults to `does-not-exist.invalid:443`. `scenario:timeout` defaults to `example.com:1`. Both can be overridden with `SCENARIO_NETWORK_HOSTNAME`, `SCENARIO_NETWORK_PORT`, `SCENARIO_TIMEOUT_HOSTNAME`, and `SCENARIO_TIMEOUT_PORT` if your network behaves differently.
+
 ## Operational Notes
 
 `/healthz` confirms the process is alive. `/readyz` checks SQLite connectivity and should be used before routing traffic to the service.

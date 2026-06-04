@@ -11,6 +11,67 @@ tasks:
     cmds:
       - go test ./...
 
+  test:api:
+    desc: Run API handler tests
+    cmds:
+      - go test ./internal/api
+
+  test:store:
+    desc: Run SQLite persistence tests
+    cmds:
+      - go test ./internal/store
+
+  test:worker:
+    desc: Run worker and retry policy tests
+    cmds:
+      - go test ./internal/worker
+
+  test:validation:
+    desc: Test bad API input validation
+    cmds:
+      - go test ./internal/api -run TestCreateJobInvalidHostnameReturnsBadRequest
+
+  test:idempotency:
+    desc: Test duplicate submission handling with idempotency keys
+    cmds:
+      - go test ./internal/api ./internal/store -run 'TestCreateJobDuplicateIdempotencyKeyReturnsExistingJob|TestSQLiteStoreCreateGetAndIdempotency'
+
+  test:status:
+    desc: Test missing jobs and result-before-completion API behavior
+    cmds:
+      - go test ./internal/api -run 'TestMissingJobReturnsNotFound|TestResultBeforeCompletionReturnsConflict'
+
+  test:retries:
+    desc: Test retry behavior for transient worker failures
+    cmds:
+      - go test ./internal/worker -run TestProcessorRetriesTransientFailureAndSucceeds
+
+  test:failures:
+    desc: Test non-retryable worker failure handling
+    cmds:
+      - go test ./internal/worker -run 'TestProcessorMarksNonRetryableFailure|TestRetryableRejectsCertificateVerificationFailures'
+
+  test:network:
+    desc: Test retry classification for transient network failures
+    cmds:
+      - go test ./internal/worker -run TestRetryableClassifiesNetworkFailures
+
+  test:timeout:
+    desc: Test retry classification for timeout failures
+    cmds:
+      - go test ./internal/worker -run TestRetryableClassifiesTimeoutFailures
+
+  test:edge-cases:
+    desc: Run focused tests for validation, idempotency, retries, failures, network errors, and timeouts
+    cmds:
+      - task: test:validation
+      - task: test:idempotency
+      - task: test:status
+      - task: test:retries
+      - task: test:failures
+      - task: test:network
+      - task: test:timeout
+
   build:
     desc: Build the service binary
     cmds:
@@ -91,6 +152,40 @@ tasks:
     desc: "Submit a job, poll it, and print the final result. Usage: task api:inspect HOSTNAME=example.com"
     cmds:
       - ./scripts/api-inspect.sh
+
+  scenario:validation:
+    desc: "API scenario: invalid hostname returns HTTP 400"
+    cmds:
+      - ./scripts/scenario.sh validation
+
+  scenario:idempotency:
+    desc: "API scenario: duplicate idempotency key returns the existing job"
+    cmds:
+      - ./scripts/scenario.sh idempotency
+
+  scenario:result-before-completion:
+    desc: "API scenario: result endpoint returns HTTP 409 before completion"
+    cmds:
+      - ./scripts/scenario.sh result-before-completion
+
+  scenario:network-failure:
+    desc: "API scenario: DNS/network failure is stored as a failed job"
+    cmds:
+      - ./scripts/scenario.sh network-failure
+
+  scenario:timeout:
+    desc: "API scenario: timeout host is retried and then stored as a failed job"
+    cmds:
+      - ./scripts/scenario.sh timeout
+
+  scenario:edge-cases:
+    desc: Run API edge-case scenarios against the local service
+    cmds:
+      - task: scenario:validation
+      - task: scenario:idempotency
+      - task: scenario:result-before-completion
+      - task: scenario:network-failure
+      - task: scenario:timeout
 
   metrics:
     desc: Read the raw Prometheus exposition output from /metrics
