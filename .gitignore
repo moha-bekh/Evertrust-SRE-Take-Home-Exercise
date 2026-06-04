@@ -1,0 +1,13 @@
+*.DS_Store
+
+# Local exercise brief files, kept out of submission history.
+TODO.md
+sre-take-home-exercise.txt
+
+# Build and runtime artifacts.
+/bin/
+/*.db
+/*.db-shm
+/*.db-wal
+/data/
+/coverage.out
