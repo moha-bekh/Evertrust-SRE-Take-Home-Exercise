@@ -47,16 +47,18 @@ type Processor struct {
 	queue     *Queue
 	inspector Inspector
 	logger    *slog.Logger
+	jobDelay  time.Duration
 	done      chan struct{}
 	once      sync.Once
 }
 
-func NewProcessor(store store.Store, queue *Queue, inspector Inspector, logger *slog.Logger) *Processor {
+func NewProcessor(store store.Store, queue *Queue, inspector Inspector, logger *slog.Logger, jobDelay time.Duration) *Processor {
 	return &Processor{
 		store:     store,
 		queue:     queue,
 		inspector: inspector,
 		logger:    logger,
+		jobDelay:  jobDelay,
 		done:      make(chan struct{}),
 	}
 }
@@ -95,6 +97,14 @@ func (p *Processor) process(ctx context.Context, jobID string) {
 		if err != nil {
 			p.logger.Error("mark job running", slog.String("job_id", jobID), slog.String("error", err.Error()))
 			return
+		}
+
+		if p.jobDelay > 0 {
+			select {
+			case <-time.After(p.jobDelay):
+			case <-ctx.Done():
+				return
+			}
 		}
 
 		inspectionStarted := time.Now()

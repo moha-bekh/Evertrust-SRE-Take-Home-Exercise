@@ -5,6 +5,7 @@ services:
       LISTEN_ADDRESS: ":8080"
       DATABASE_PATH: "/data/certificate-inspector.db"
       MIGRATIONS_PATH: "/app/migrations"
+      WORKER_JOB_DELAY: "750ms"
     ports:
       - "8080:8080"
     volumes:

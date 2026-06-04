@@ -27,7 +27,7 @@ func TestProcessorRetriesTransientFailureAndSucceeds(t *testing.T) {
 			{result: job.CertificateResult{Hostname: "example.com", Port: 443}},
 		},
 	}
-	processor := NewProcessor(store, NewQueue(10), inspector, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	processor := NewProcessor(store, NewQueue(10), inspector, slog.New(slog.NewTextHandler(io.Discard, nil)), 0)
 
 	processor.process(context.Background(), "job-1")
 
@@ -54,7 +54,7 @@ func TestProcessorMarksNonRetryableFailure(t *testing.T) {
 	inspector := &fakeInspector{
 		results: []inspectResult{{err: errors.New("certificate verification failed")}},
 	}
-	processor := NewProcessor(store, NewQueue(10), inspector, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	processor := NewProcessor(store, NewQueue(10), inspector, slog.New(slog.NewTextHandler(io.Discard, nil)), 0)
 
 	processor.process(context.Background(), "job-1")
 

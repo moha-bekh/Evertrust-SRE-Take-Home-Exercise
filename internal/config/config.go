@@ -15,6 +15,7 @@ type Config struct {
 	HTTPWriteTimeout  time.Duration
 	HTTPIdleTimeout   time.Duration
 	InspectionTimeout time.Duration
+	WorkerJobDelay    time.Duration
 	ShutdownTimeout   time.Duration
 }
 
@@ -28,6 +29,7 @@ func FromEnv() Config {
 		HTTPWriteTimeout:  envDuration("HTTP_WRITE_TIMEOUT", 10*time.Second),
 		HTTPIdleTimeout:   envDuration("HTTP_IDLE_TIMEOUT", 60*time.Second),
 		InspectionTimeout: envDuration("INSPECTION_TIMEOUT", 5*time.Second),
+		WorkerJobDelay:    envDuration("WORKER_JOB_DELAY", 0),
 		ShutdownTimeout:   envDuration("SHUTDOWN_TIMEOUT", 10*time.Second),
 	}
 }

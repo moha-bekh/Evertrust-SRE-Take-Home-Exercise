@@ -33,6 +33,8 @@ task docker-up
 
 The API listens on `http://localhost:8080`.
 
+The Docker Compose stack sets a small `WORKER_JOB_DELAY` to make queue and in-progress metrics visible during local demos. The default outside Compose is no artificial delay.
+
 ## Exercise the API
 
 ```bash
@@ -126,7 +128,7 @@ Logs are emitted as structured JSON to stdout. Metrics are exposed in Prometheus
 
 Grafana is provisioned automatically with a Prometheus datasource and a `Certificate Inspector Overview` dashboard. Anonymous viewer access is enabled for local review only.
 
-`jobs_in_progress` and `job_queue_depth` are short-lived gauges, so Prometheus scrapes every second in the local stack and the dashboard displays their 5-minute maximum to make brief queue activity visible during demos.
+`jobs_in_progress` and `job_queue_depth` are short-lived gauges. The local stack uses a 1-second Prometheus scrape interval, a 2-second Grafana refresh interval, and the dashboard displays their 5-minute maximum to make brief queue activity visible during demos.
 
 The current worker uses a bounded in-memory queue. This keeps local operation simple, but queued jobs are lost if the process exits before they are processed.
 

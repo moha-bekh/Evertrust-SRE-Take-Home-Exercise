@@ -34,7 +34,7 @@ func main() {
 
 	queue := worker.NewQueue(cfg.QueueSize)
 	inspector := worker.NewCertificateInspector(cfg.InspectionTimeout)
-	processor := worker.NewProcessor(db, queue, inspector, logger)
+	processor := worker.NewProcessor(db, queue, inspector, logger, cfg.WorkerJobDelay)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
