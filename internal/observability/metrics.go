@@ -3,6 +3,7 @@ package observability
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -67,13 +68,21 @@ func HTTPMetricsMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(recorder, r)
 
 		status := strconv.Itoa(recorder.status)
-		path := r.Pattern
-		if path == "" {
-			path = r.URL.Path
-		}
+		path := normalizePath(r.URL.Path)
 		HTTPRequestTotal.WithLabelValues(r.Method, path, status).Inc()
 		HTTPRequestDuration.WithLabelValues(r.Method, path).Observe(time.Since(started).Seconds())
 	})
+}
+
+func normalizePath(path string) string {
+	parts := strings.Split(strings.Trim(path, "/"), "/")
+	if len(parts) == 3 && parts[0] == "jobs" && (parts[2] == "status" || parts[2] == "result") {
+		return "/jobs/{id}/" + parts[2]
+	}
+	if path == "" {
+		return "/"
+	}
+	return path
 }
 
 type statusRecorder struct {
