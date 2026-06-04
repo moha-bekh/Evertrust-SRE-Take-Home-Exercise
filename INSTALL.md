@@ -14,13 +14,20 @@ Install these tools before running the project:
 Using Homebrew:
 
 ```bash
-brew install go-task/tap/go-task go jq yq
+brew install go-task go jq yq
 ```
 
 Install Docker Desktop separately:
 
 ```txt
 https://www.docker.com/products/docker-desktop/
+```
+
+If Homebrew reports a tap conflict for `go-task`, keep the already installed package if `task --version` works. Otherwise uninstall the conflicting formula first:
+
+```bash
+brew uninstall go-task
+brew install go-task
 ```
 
 ## Ubuntu
