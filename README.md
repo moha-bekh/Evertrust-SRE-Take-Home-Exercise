@@ -158,11 +158,14 @@ Grafana is provisioned automatically with a Prometheus datasource and a `Certifi
 
 The current worker uses a bounded in-memory queue. This keeps local operation simple, but queued jobs are lost if the process exits before they are processed.
 
+On shutdown, the service stops accepting HTTP traffic and cancels the worker context. In-flight TLS inspections are bounded by the inspection timeout, which is `5s` by default.
+
 ## Known Tradeoffs
 
 - The queue is in-memory and not durable across restarts.
 - SQLite is appropriate for local development, not production-scale multi-writer workloads.
 - The current structure uses one worker for clarity.
+- Graceful shutdown is intentionally simple; it does not persist or resume the in-memory queue.
 - Authentication is intentionally out of scope.
 - Distributed tracing and Kubernetes manifests are intentionally out of scope.
 - TLS verification is enabled by default; internal self-signed certificates would need an explicit future option.
@@ -173,6 +176,6 @@ The current worker uses a bounded in-memory queue. This keeps local operation si
 - DB-backed queue or polling to recover pending jobs after restarts.
 - Multiple workers with concurrency controls.
 - More complete retry classification for transient network failures.
-- API, store, and worker tests for the main paths.
+- Broader integration tests and edge-case coverage.
 - OpenTelemetry tracing.
 - Grafana alert rules.

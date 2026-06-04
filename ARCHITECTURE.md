@@ -55,7 +55,7 @@ Idempotency is implemented with an optional `idempotency_key`. If the key alread
 
 Timeouts are configured for HTTP reads/writes and certificate inspection. TLS verification is enabled by default.
 
-Graceful shutdown stops the HTTP server and lets the worker stop through context cancellation.
+Graceful shutdown stops accepting HTTP traffic and cancels the worker context. An inspection already in progress is bounded by the configured certificate inspection timeout, which defaults to `5s`. Queued-but-not-started jobs remain a known tradeoff of the in-memory queue.
 
 ## Tradeoffs
 
@@ -66,13 +66,14 @@ Graceful shutdown stops the HTTP server and lets the worker stop through context
 - Certificate failure classification is currently coarse.
 - Hostname labels are avoided in metrics to prevent high-cardinality series.
 - Grafana anonymous access is enabled only to reduce friction for local review.
+- Graceful shutdown is bounded and pragmatic, but it does not provide durable recovery for queued work.
 
 ## Future Improvements
 
 - DB-backed queue with recovery of pending/running jobs after restart.
 - Multiple workers with bounded concurrency and backpressure.
 - Retry only transient-looking network failures.
-- More complete tests around API behavior, store behavior, and worker retries.
+- Broader integration tests covering Docker Compose startup, API flows, and observability endpoints.
 - OpenTelemetry traces and structured correlation IDs.
 - Grafana and Prometheus alert rules.
 - Explicit disabled-by-default option for internal/self-signed certificates.
