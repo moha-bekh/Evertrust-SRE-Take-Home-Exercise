@@ -69,6 +69,18 @@ HOSTNAMES="example.com|github.com|expired.badssl.com" task demo
 
 ## API Examples
 
+Use Task shortcuts:
+
+```bash
+task api:health
+task api:ready
+task api:submit HOSTNAME=example.com
+task api:inspect HOSTNAME=example.com
+task api:list LIMIT=10
+task api:status JOB_ID=<job-id>
+task api:result JOB_ID=<job-id>
+```
+
 Submit a job:
 
 ```bash

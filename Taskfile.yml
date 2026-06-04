@@ -42,6 +42,51 @@ tasks:
     cmds:
       - rm -f certificate-inspector.db certificate-inspector.db-shm certificate-inspector.db-wal
 
+  api:health:
+    desc: Call GET /healthz
+    cmds:
+      - curl -fsS "${BASE_URL:-http://localhost:8080}/healthz"
+
+  api:ready:
+    desc: Call GET /readyz
+    cmds:
+      - curl -fsS "${BASE_URL:-http://localhost:8080}/readyz"
+
+  api:list:
+    desc: Call GET /jobs
+    cmds:
+      - curl -fsS "${BASE_URL:-http://localhost:8080}/jobs?limit=${LIMIT:-10}"
+
+  api:submit:
+    desc: "Submit a certificate inspection job. Usage: task api:submit HOSTNAME=example.com"
+    cmds:
+      - |
+        hostname="${HOSTNAME:-example.com}"
+        port="${PORT:-443}"
+        idempotency_key="${IDEMPOTENCY_KEY:-api-$(date +%s)-$$}"
+        curl -fsS -X POST "${BASE_URL:-http://localhost:8080}/jobs" \
+          -H 'Content-Type: application/json' \
+          -d "{\"hostname\":\"${hostname}\",\"port\":${port},\"idempotency_key\":\"${idempotency_key}\"}"
+
+  api:status:
+    desc: "Get job status. Usage: task api:status JOB_ID=<id>"
+    cmds:
+      - |
+        test -n "${JOB_ID:-}" || (echo "JOB_ID is required" >&2; exit 1)
+        curl -fsS "${BASE_URL:-http://localhost:8080}/jobs/${JOB_ID}/status"
+
+  api:result:
+    desc: "Get job result. Usage: task api:result JOB_ID=<id>"
+    cmds:
+      - |
+        test -n "${JOB_ID:-}" || (echo "JOB_ID is required" >&2; exit 1)
+        curl -fsS "${BASE_URL:-http://localhost:8080}/jobs/${JOB_ID}/result"
+
+  api:inspect:
+    desc: "Submit a job, poll it, and print the final result. Usage: task api:inspect HOSTNAME=example.com"
+    cmds:
+      - ./scripts/api-inspect.sh
+
   demo:
     desc: Exercise the API with one or more hostnames
     cmds:
