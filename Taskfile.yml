@@ -41,3 +41,8 @@ tasks:
     desc: Exercise the API with a batch that includes success and failure cases
     cmds:
       - HOSTNAMES="example.com|github.com|expired.badssl.com" ./scripts/demo.sh
+
+  demo-big-batch:
+    desc: Exercise the API with a larger hostname batch to make queue metrics easier to see
+    cmds:
+      - HOSTNAMES="example.com|github.com|gitlab.com|google.com|cloudflare.com|letsencrypt.org|prometheus.io|grafana.com|golang.org|docker.com|kubernetes.io|sqlite.org|ietf.org|wikipedia.org|mozilla.org|expired.badssl.com|wrong.host.badssl.com|self-signed.badssl.com" ./scripts/demo.sh

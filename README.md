@@ -45,6 +45,12 @@ Run a batch demo to make queue and worker behavior more visible:
 task demo-batch
 ```
 
+Run a larger batch to make transient queue and in-progress metrics easier to catch in Grafana:
+
+```bash
+task demo-big-batch
+```
+
 Or provide a custom hostname list:
 
 ```bash
@@ -119,6 +125,8 @@ task test
 Logs are emitted as structured JSON to stdout. Metrics are exposed in Prometheus format at `/metrics`.
 
 Grafana is provisioned automatically with a Prometheus datasource and a `Certificate Inspector Overview` dashboard. Anonymous viewer access is enabled for local review only.
+
+`jobs_in_progress` and `job_queue_depth` are short-lived gauges, so Prometheus scrapes every second in the local stack and the dashboard displays their 5-minute maximum to make brief queue activity visible during demos.
 
 The current worker uses a bounded in-memory queue. This keeps local operation simple, but queued jobs are lost if the process exits before they are processed.
 

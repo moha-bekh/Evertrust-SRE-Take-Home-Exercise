@@ -384,7 +384,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "jobs_in_progress",
+          "expr": "max_over_time(jobs_in_progress[5m])",
           "legendFormat": "in progress",
           "refId": "A"
         }
@@ -450,7 +450,7 @@
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "expr": "job_queue_depth",
+          "expr": "max_over_time(job_queue_depth[5m])",
           "legendFormat": "depth",
           "refId": "A"
         }
