@@ -1,0 +1,43 @@
+version: "3"
+
+tasks:
+  run:
+    desc: Run the service locally with Go
+    cmds:
+      - go run ./cmd/server
+
+  test:
+    desc: Run all tests
+    cmds:
+      - go test ./...
+
+  build:
+    desc: Build the service binary
+    cmds:
+      - mkdir -p bin
+      - go build -o bin/certificate-inspector ./cmd/server
+
+  docker-up:
+    desc: Start the full local stack
+    cmds:
+      - docker compose up --build
+
+  docker-up-detached:
+    desc: Start the full local stack in the background
+    cmds:
+      - docker compose up -d --build
+
+  docker-down:
+    desc: Stop the local stack
+    cmds:
+      - docker compose down
+
+  demo:
+    desc: Exercise the API with one or more hostnames
+    cmds:
+      - ./scripts/demo.sh
+
+  demo-batch:
+    desc: Exercise the API with a batch that includes success and failure cases
+    cmds:
+      - HOSTNAMES="example.com|github.com|expired.badssl.com" ./scripts/demo.sh

@@ -22,12 +22,13 @@ This project demonstrates a production-style SRE workflow:
 
 - Docker
 - Docker Compose
+- Task
 - Go 1.22, optional for local development
 
 ## Run
 
 ```bash
-docker compose up --build
+task docker-up
 ```
 
 The API listens on `http://localhost:8080`.
@@ -35,7 +36,19 @@ The API listens on `http://localhost:8080`.
 ## Exercise the API
 
 ```bash
-./scripts/demo.sh
+task demo
+```
+
+Run a batch demo to make queue and worker behavior more visible:
+
+```bash
+task demo-batch
+```
+
+Or provide a custom hostname list:
+
+```bash
+HOSTNAMES="example.com|github.com|expired.badssl.com" task demo
 ```
 
 ## API Examples
@@ -96,7 +109,7 @@ http://localhost:8080/readyz
 ## Tests
 
 ```bash
-make test
+task test
 ```
 
 ## Operational Notes
