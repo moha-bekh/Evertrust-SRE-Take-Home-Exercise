@@ -646,7 +646,7 @@
       "type": "timeseries"
     }
   ],
-  "refresh": "2s",
+  "refresh": "5s",
   "schemaVersion": 39,
   "tags": [
     "sre",
