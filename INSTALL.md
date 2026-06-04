@@ -38,6 +38,10 @@ sudo usermod -aG docker "$USER"
 
 After adding your user to the `docker` group, log out and log back in before running Docker commands.
 
+## Arch Linux / NixOS
+
+You already know how to install packages.
+
 ## Verify
 
 ```bash
