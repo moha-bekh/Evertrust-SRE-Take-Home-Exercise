@@ -23,13 +23,6 @@ Install Docker Desktop separately:
 https://www.docker.com/products/docker-desktop/
 ```
 
-If Homebrew reports a tap conflict for `go-task`, keep the already installed package if `task --version` works. Otherwise uninstall the conflicting formula first:
-
-```bash
-brew uninstall go-task
-brew install go-task
-```
-
 ## Ubuntu
 
 Using apt and the official Docker convenience script:
