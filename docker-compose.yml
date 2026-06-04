@@ -34,7 +34,7 @@ services:
       GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
       GF_AUTH_DISABLE_LOGIN_FORM: "true"
       GF_LOG_FILTERS: "authn.service:error"
-      GF_USERS_DEFAULT_THEME: "light"
+      GF_USERS_DEFAULT_THEME: "dark"
     ports:
       - "3000:3000"
     volumes:
