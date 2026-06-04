@@ -2,7 +2,7 @@
 set -euo pipefail
 
 BASE_URL="${BASE_URL:-http://localhost:8080}"
-IDEMPOTENCY_KEY="demo-example-com"
+IDEMPOTENCY_KEY="demo-example-com-$(date +%s)"
 
 echo "Submitting certificate inspection job"
 CREATE_RESPONSE="$(curl -fsS -X POST "${BASE_URL}/jobs" \
@@ -35,7 +35,7 @@ echo
 
 echo
 echo "Submitting invalid hostname"
-curl -fsS -X POST "${BASE_URL}/jobs" \
+curl -sS -X POST "${BASE_URL}/jobs" \
   -H 'Content-Type: application/json' \
   -d '{"hostname":"https://bad.example","port":443}' || true
 echo
