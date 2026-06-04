@@ -53,6 +53,14 @@ Run a larger batch to make transient queue and in-progress metrics easier to cat
 task demo-big-batch
 ```
 
+Reset the Docker SQLite volume before a clean demo run:
+
+```bash
+task db-reset
+task docker-up-detached
+task demo-big-batch
+```
+
 Or provide a custom hostname list:
 
 ```bash

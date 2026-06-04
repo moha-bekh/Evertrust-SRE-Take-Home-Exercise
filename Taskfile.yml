@@ -32,6 +32,16 @@ tasks:
     cmds:
       - docker compose down
 
+  db-reset:
+    desc: Stop the local stack and remove the Docker volume that stores SQLite data
+    cmds:
+      - docker compose down --volumes
+
+  db-reset-local:
+    desc: Remove the local SQLite database used by task run
+    cmds:
+      - rm -f certificate-inspector.db certificate-inspector.db-shm certificate-inspector.db-wal
+
   demo:
     desc: Exercise the API with one or more hostnames
     cmds:

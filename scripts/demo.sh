@@ -3,7 +3,7 @@ set -euo pipefail
 
 BASE_URL="${BASE_URL:-http://localhost:8080}"
 HOSTNAMES="${HOSTNAMES:-example.com}"
-RUN_ID="$(date +%s)"
+RUN_ID="$(date +%s)-$$"
 
 IFS='|' read -r -a HOSTNAME_LIST <<< "${HOSTNAMES}"
 
