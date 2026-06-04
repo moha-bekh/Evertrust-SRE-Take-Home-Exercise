@@ -1,0 +1,30 @@
+services:
+  certificate-inspector:
+    build: .
+    environment:
+      LISTEN_ADDRESS: ":8080"
+      DATABASE_PATH: "/data/certificate-inspector.db"
+      MIGRATIONS_PATH: "/app/migrations"
+    ports:
+      - "8080:8080"
+    volumes:
+      - certificate-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/readyz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./ops/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - certificate-inspector
+
+volumes:
+  certificate-data:
