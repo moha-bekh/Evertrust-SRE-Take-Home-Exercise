@@ -24,6 +24,7 @@ This project demonstrates a production-style SRE workflow:
 - Docker Compose
 - Task
 - curl
+- ripgrep
 - jq
 - yq
 - Go 1.22, optional for local development
@@ -87,6 +88,18 @@ task api:result JOB_ID=<job-id>
 task docker-config
 ```
 
+Use metrics shortcuts:
+
+```bash
+task metrics
+task metrics:custom
+task metrics:business
+task prom:query QUERY='jobs_submitted_total'
+task prom:jobs
+task prom:errors
+task prom:latency
+```
+
 Submit a job:
 
 ```bash
@@ -120,6 +133,8 @@ Metrics:
 ```txt
 http://localhost:8080/metrics
 ```
+
+The `/metrics` endpoint uses Prometheus text format, so `jq` and `yq` are not suitable for it directly. Use `task metrics:custom` or Prometheus query tasks for cleaner terminal output.
 
 Prometheus:
 

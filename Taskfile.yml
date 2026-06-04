@@ -92,6 +92,55 @@ tasks:
     cmds:
       - ./scripts/api-inspect.sh
 
+  metrics:
+    desc: Read the raw Prometheus exposition output from /metrics
+    cmds:
+      - curl -fsS "${BASE_URL:-http://localhost:8080}/metrics"
+
+  metrics:custom:
+    desc: Show custom service metrics from /metrics
+    cmds:
+      - curl -fsS "${BASE_URL:-http://localhost:8080}/metrics" | rg '^(# HELP|# TYPE|http_requests_total|http_request_duration_seconds|jobs_|job_|certificate_)'
+
+  metrics:business:
+    desc: Show custom service metric values without histogram buckets
+    cmds:
+      - curl -fsS "${BASE_URL:-http://localhost:8080}/metrics" | rg '^(http_requests_total|jobs_|job_|certificate_)' | rg -v '_bucket'
+
+  prom:query:
+    desc: "Run a Prometheus instant query. Usage: task prom:query QUERY='jobs_submitted_total'"
+    cmds:
+      - |
+        query="${QUERY:-jobs_submitted_total}"
+        curl -G -fsS "${PROM_URL:-http://localhost:9090}/api/v1/query" \
+          --data-urlencode "query=${query}" | jq .
+
+  prom:jobs:
+    desc: Query job counters and queue gauges from Prometheus
+    cmds:
+      - |
+        curl -G -fsS "${PROM_URL:-http://localhost:9090}/api/v1/query" \
+          --data-urlencode 'query={__name__=~"jobs_submitted_total|jobs_processed_total|jobs_retried_total|jobs_in_progress|job_queue_depth"}' | jq .
+
+  prom:errors:
+    desc: Query total HTTP 4xx/5xx errors from Prometheus
+    cmds:
+      - |
+        curl -G -fsS "${PROM_URL:-http://localhost:9090}/api/v1/query" \
+          --data-urlencode 'query=sum(http_requests_total{status=~"4..|5.."})' | jq .
+
+  prom:latency:
+    desc: Query HTTP and certificate inspection p95 latencies from Prometheus
+    cmds:
+      - |
+        echo "HTTP p95"
+        curl -G -fsS "${PROM_URL:-http://localhost:9090}/api/v1/query" \
+          --data-urlencode 'query=histogram_quantile(0.95, sum by (le, method, path) (rate(http_request_duration_seconds_bucket[5m])))' | jq .
+        echo
+        echo "Certificate inspection p95"
+        curl -G -fsS "${PROM_URL:-http://localhost:9090}/api/v1/query" \
+          --data-urlencode 'query=histogram_quantile(0.95, sum by (le) (rate(certificate_inspection_duration_seconds_bucket[5m])))' | jq .
+
   demo:
     desc: Exercise the API with one or more hostnames
     cmds:
