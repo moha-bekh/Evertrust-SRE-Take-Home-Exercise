@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"certificate-inspector/internal/job"
+	"certificate-inspector/internal/observability"
 	"certificate-inspector/internal/store"
 	"certificate-inspector/internal/worker"
 	"github.com/google/uuid"
@@ -82,6 +83,7 @@ func (h *Handler) createJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	observability.JobsSubmittedTotal.Inc()
 	h.logger.Info("job submitted", slog.String("job_id", item.ID), slog.String("hostname", item.Hostname))
 	writeJSON(w, http.StatusAccepted, responseFromJob(item))
 }
