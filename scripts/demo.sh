@@ -7,6 +7,10 @@ RUN_ID="$(date +%s)-$$"
 
 IFS='|' read -r -a HOSTNAME_LIST <<< "${HOSTNAMES}"
 
+print_json() {
+  printf '%s\n' "$1" | jq .
+}
+
 if [ "${#HOSTNAME_LIST[@]}" -eq 0 ]; then
   echo "No hostnames provided" >&2
   exit 1
@@ -33,7 +37,7 @@ for raw_hostname in "${HOSTNAME_LIST[@]}"; do
   create_response="$(curl -fsS -X POST "${BASE_URL}/jobs" \
     -H 'Content-Type: application/json' \
     -d "{\"hostname\":\"${hostname}\",\"port\":443,\"idempotency_key\":\"${idempotency_key}\"}")"
-  echo "${create_response}"
+  print_json "${create_response}"
 
   job_id="$(printf '%s' "${create_response}" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')"
   if [ -z "${job_id}" ]; then
@@ -67,7 +71,8 @@ for _ in $(seq 1 30); do
     job_id="${JOB_IDS[index]}"
     hostname="${JOB_HOSTNAMES[index]}"
     status_response="$(curl -fsS "${BASE_URL}/jobs/${job_id}/status")"
-    echo "${hostname}: ${status_response}"
+    echo "${hostname}:"
+    print_json "${status_response}"
     status="$(printf '%s' "${status_response}" | sed -n 's/.*"status":"\([^"]*\)".*/\1/p')"
     if [ "${status}" = "succeeded" ] || [ "${status}" = "failed" ]; then
       JOB_DONE[index]=1
@@ -88,7 +93,7 @@ for index in "${!JOB_IDS[@]}"; do
   job_id="${JOB_IDS[index]}"
   hostname="${JOB_HOSTNAMES[index]}"
   echo "${hostname}:"
-  curl -sS "${BASE_URL}/jobs/${job_id}/result" || true
+  curl -sS "${BASE_URL}/jobs/${job_id}/result" | jq . || true
   echo
 done
 
@@ -96,14 +101,14 @@ echo
 echo "Submitting invalid hostname"
 curl -sS -X POST "${BASE_URL}/jobs" \
   -H 'Content-Type: application/json' \
-  -d '{"hostname":"https://bad.example","port":443}' || true
+  -d '{"hostname":"https://bad.example","port":443}' | jq . || true
 echo
 
 echo
 echo "Submitting duplicate idempotency key"
 curl -fsS -X POST "${BASE_URL}/jobs" \
   -H 'Content-Type: application/json' \
-  -d "{\"hostname\":\"${FIRST_HOSTNAME}\",\"port\":443,\"idempotency_key\":\"${FIRST_IDEMPOTENCY_KEY}\"}"
+  -d "{\"hostname\":\"${FIRST_HOSTNAME}\",\"port\":443,\"idempotency_key\":\"${FIRST_IDEMPOTENCY_KEY}\"}" | jq .
 echo
 
 echo

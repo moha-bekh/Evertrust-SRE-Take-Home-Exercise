@@ -23,7 +23,12 @@ This project demonstrates a production-style SRE workflow:
 - Docker
 - Docker Compose
 - Task
+- curl
+- jq
+- yq
 - Go 1.22, optional for local development
+
+See [INSTALL.md](./INSTALL.md) for macOS and Ubuntu installation commands.
 
 ## Run
 
@@ -79,6 +84,7 @@ task api:inspect HOSTNAME=example.com
 task api:list LIMIT=10
 task api:status JOB_ID=<job-id>
 task api:result JOB_ID=<job-id>
+task docker-config
 ```
 
 Submit a job:

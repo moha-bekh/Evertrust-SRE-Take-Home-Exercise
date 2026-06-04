@@ -32,6 +32,11 @@ tasks:
     cmds:
       - docker compose down
 
+  docker-config:
+    desc: Render the Docker Compose configuration as formatted YAML
+    cmds:
+      - docker compose config | yq .
+
   db-reset:
     desc: Stop the local stack and remove the Docker volume that stores SQLite data
     cmds:
@@ -45,17 +50,17 @@ tasks:
   api:health:
     desc: Call GET /healthz
     cmds:
-      - curl -fsS "${BASE_URL:-http://localhost:8080}/healthz"
+      - curl -fsS "${BASE_URL:-http://localhost:8080}/healthz" | jq .
 
   api:ready:
     desc: Call GET /readyz
     cmds:
-      - curl -fsS "${BASE_URL:-http://localhost:8080}/readyz"
+      - curl -fsS "${BASE_URL:-http://localhost:8080}/readyz" | jq .
 
   api:list:
     desc: Call GET /jobs
     cmds:
-      - curl -fsS "${BASE_URL:-http://localhost:8080}/jobs?limit=${LIMIT:-10}"
+      - curl -fsS "${BASE_URL:-http://localhost:8080}/jobs?limit=${LIMIT:-10}" | jq .
 
   api:submit:
     desc: "Submit a certificate inspection job. Usage: task api:submit HOSTNAME=example.com"
@@ -66,21 +71,21 @@ tasks:
         idempotency_key="${IDEMPOTENCY_KEY:-api-$(date +%s)-$$}"
         curl -fsS -X POST "${BASE_URL:-http://localhost:8080}/jobs" \
           -H 'Content-Type: application/json' \
-          -d "{\"hostname\":\"${hostname}\",\"port\":${port},\"idempotency_key\":\"${idempotency_key}\"}"
+          -d "{\"hostname\":\"${hostname}\",\"port\":${port},\"idempotency_key\":\"${idempotency_key}\"}" | jq .
 
   api:status:
     desc: "Get job status. Usage: task api:status JOB_ID=<id>"
     cmds:
       - |
         test -n "${JOB_ID:-}" || (echo "JOB_ID is required" >&2; exit 1)
-        curl -fsS "${BASE_URL:-http://localhost:8080}/jobs/${JOB_ID}/status"
+        curl -fsS "${BASE_URL:-http://localhost:8080}/jobs/${JOB_ID}/status" | jq .
 
   api:result:
     desc: "Get job result. Usage: task api:result JOB_ID=<id>"
     cmds:
       - |
         test -n "${JOB_ID:-}" || (echo "JOB_ID is required" >&2; exit 1)
-        curl -fsS "${BASE_URL:-http://localhost:8080}/jobs/${JOB_ID}/result"
+        curl -fsS "${BASE_URL:-http://localhost:8080}/jobs/${JOB_ID}/result" | jq .
 
   api:inspect:
     desc: "Submit a job, poll it, and print the final result. Usage: task api:inspect HOSTNAME=example.com"

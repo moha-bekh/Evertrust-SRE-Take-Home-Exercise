@@ -10,7 +10,7 @@ echo "Submitting ${HOSTNAME}:${PORT}"
 create_response="$(curl -fsS -X POST "${BASE_URL}/jobs" \
   -H 'Content-Type: application/json' \
   -d "{\"hostname\":\"${HOSTNAME}\",\"port\":${PORT},\"idempotency_key\":\"${IDEMPOTENCY_KEY}\"}")"
-echo "${create_response}"
+printf '%s\n' "${create_response}" | jq .
 
 job_id="$(printf '%s' "${create_response}" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')"
 if [ -z "${job_id}" ]; then
@@ -23,7 +23,7 @@ echo "Polling ${job_id}"
 status="pending"
 for _ in $(seq 1 30); do
   status_response="$(curl -fsS "${BASE_URL}/jobs/${job_id}/status")"
-  echo "${status_response}"
+  printf '%s\n' "${status_response}" | jq .
   status="$(printf '%s' "${status_response}" | sed -n 's/.*"status":"\([^"]*\)".*/\1/p')"
   if [ "${status}" = "succeeded" ] || [ "${status}" = "failed" ]; then
     break
@@ -33,7 +33,7 @@ done
 
 echo
 echo "Result"
-curl -sS "${BASE_URL}/jobs/${job_id}/result"
+curl -sS "${BASE_URL}/jobs/${job_id}/result" | jq .
 echo
 
 if [ "${status}" != "succeeded" ] && [ "${status}" != "failed" ]; then
