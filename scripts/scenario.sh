@@ -27,7 +27,7 @@ poll_until_terminal() {
   for _ in $(seq 1 30); do
     response="$(curl -fsS "${BASE_URL}/jobs/${job_id}/status")"
     status="$(printf '%s' "${response}" | json_field '.status')"
-    printf '%s\n' "${response}" | jq .
+    printf '%s\n' "${response}" | jq -C .
 
     if [ "${status}" = "succeeded" ] || [ "${status}" = "failed" ]; then
       break
@@ -48,7 +48,7 @@ case "${SCENARIO}" in
       -X POST "${BASE_URL}/jobs" \
       -H 'Content-Type: application/json' \
       -d '{"hostname":"https://bad.example","port":443}')"
-    jq . /tmp/certificate-inspector-validation.json
+    jq -C . /tmp/certificate-inspector-validation.json
     test "${status_code}" = "400"
     ;;
 
@@ -59,8 +59,8 @@ case "${SCENARIO}" in
     second="$(submit_job "example.com" 443 "${key}")"
     first_id="$(printf '%s' "${first}" | json_field '.id')"
     second_id="$(printf '%s' "${second}" | json_field '.id')"
-    printf '%s\n' "${first}" | jq .
-    printf '%s\n' "${second}" | jq .
+    printf '%s\n' "${first}" | jq -C .
+    printf '%s\n' "${second}" | jq -C .
     test "${first_id}" = "${second_id}"
     ;;
 
@@ -68,10 +68,10 @@ case "${SCENARIO}" in
     echo "Scenario: result endpoint returns HTTP 409 while the job is still pending/running"
     response="$(submit_job "example.com" 443 "scenario-conflict-$(date +%s)-$$")"
     job_id="$(printf '%s' "${response}" | json_field '.id')"
-    printf '%s\n' "${response}" | jq .
+    printf '%s\n' "${response}" | jq -C .
     status_code="$(curl -sS -o /tmp/certificate-inspector-result-before-completion.json -w '%{http_code}' \
       "${BASE_URL}/jobs/${job_id}/result")"
-    jq . /tmp/certificate-inspector-result-before-completion.json
+    jq -C . /tmp/certificate-inspector-result-before-completion.json
     test "${status_code}" = "409"
     ;;
 
@@ -81,9 +81,9 @@ case "${SCENARIO}" in
     port="${SCENARIO_NETWORK_PORT:-443}"
     response="$(submit_job "${hostname}" "${port}" "scenario-network-failure-$(date +%s)-$$")"
     job_id="$(printf '%s' "${response}" | json_field '.id')"
-    printf '%s\n' "${response}" | jq .
+    printf '%s\n' "${response}" | jq -C .
     poll_until_terminal "${job_id}" "failed"
-    curl -fsS "${BASE_URL}/jobs/${job_id}/result" | jq .
+    curl -fsS "${BASE_URL}/jobs/${job_id}/result" | jq -C .
     ;;
 
   timeout)
@@ -92,10 +92,10 @@ case "${SCENARIO}" in
     port="${SCENARIO_TIMEOUT_PORT:-1}"
     response="$(submit_job "${hostname}" "${port}" "scenario-timeout-$(date +%s)-$$")"
     job_id="$(printf '%s' "${response}" | json_field '.id')"
-    printf '%s\n' "${response}" | jq .
+    printf '%s\n' "${response}" | jq -C .
     poll_until_terminal "${job_id}" "failed"
-    curl -fsS "${BASE_URL}/jobs/${job_id}/status" | jq .
-    curl -fsS "${BASE_URL}/jobs/${job_id}/result" | jq .
+    curl -fsS "${BASE_URL}/jobs/${job_id}/status" | jq -C .
+    curl -fsS "${BASE_URL}/jobs/${job_id}/result" | jq -C .
     ;;
 
   *)

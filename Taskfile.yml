@@ -108,75 +108,104 @@ tasks:
     cmds:
       - rm -f certificate-inspector.db certificate-inspector.db-shm certificate-inspector.db-wal
 
+  logs:clean:
+    desc: Remove task logs after confirmation
+    silent: true
+    cmds:
+      - |
+        log_dir="${TASK_LOG_DIR:-logs}"
+        case "${log_dir}" in
+          ""|"."|"/"|"/tmp"|"/tmp/"|"/var"|"/var/"|"/Users"|"/Users/")
+            echo "Refusing to clean unsafe log directory: ${log_dir}" >&2
+            exit 1
+            ;;
+        esac
+        if [ ! -d "${log_dir}" ]; then
+          echo "No log directory found at ${log_dir}"
+          exit 0
+        fi
+        echo "This will delete all task logs in ${log_dir}"
+        printf 'Type yes to continue: '
+        read -r confirmation
+        if [ "${confirmation}" != "yes" ]; then
+          echo "Aborted"
+          exit 1
+        fi
+        rm -rf "${log_dir:?}/"*
+        echo "Cleaned ${log_dir}"
+
   api:health:
     desc: Call GET /healthz
     cmds:
-      - curl -fsS "${BASE_URL:-http://localhost:8080}/healthz" | jq .
+      - curl -fsS "${BASE_URL:-http://localhost:8080}/healthz" | jq -C .
 
   api:ready:
     desc: Call GET /readyz
     cmds:
-      - curl -fsS "${BASE_URL:-http://localhost:8080}/readyz" | jq .
+      - curl -fsS "${BASE_URL:-http://localhost:8080}/readyz" | jq -C .
 
   api:list:
     desc: Call GET /jobs
     cmds:
-      - curl -fsS "${BASE_URL:-http://localhost:8080}/jobs?limit=${LIMIT:-10}" | jq .
+      - ./scripts/task-log.sh "{{.TASK}}" -- bash -c 'set -euo pipefail; curl -fsS "${BASE_URL:-http://localhost:8080}/jobs?limit=${LIMIT:-10}" | jq -C .'
 
   api:submit:
     desc: "Submit a certificate inspection job. Usage: task api:submit HOSTNAME=example.com"
     cmds:
       - |
-        hostname="${HOSTNAME:-example.com}"
-        port="${PORT:-443}"
-        idempotency_key="${IDEMPOTENCY_KEY:-api-$(date +%s)-$$}"
-        curl -fsS -X POST "${BASE_URL:-http://localhost:8080}/jobs" \
-          -H 'Content-Type: application/json' \
-          -d "{\"hostname\":\"${hostname}\",\"port\":${port},\"idempotency_key\":\"${idempotency_key}\"}" | jq .
+        ./scripts/task-log.sh "{{.TASK}}" -- bash -c 'set -euo pipefail; 
+          hostname="${HOSTNAME:-example.com}"
+          port="${PORT:-443}"
+          idempotency_key="${IDEMPOTENCY_KEY:-api-$(date +%s)-$$}"
+          curl -fsS -X POST "${BASE_URL:-http://localhost:8080}/jobs" \
+            -H "Content-Type: application/json" \
+            -d "{\"hostname\":\"${hostname}\",\"port\":${port},\"idempotency_key\":\"${idempotency_key}\"}" | jq -C .'
 
   api:status:
     desc: "Get job status. Usage: task api:status JOB_ID=<id>"
     cmds:
       - |
-        test -n "${JOB_ID:-}" || (echo "JOB_ID is required" >&2; exit 1)
-        curl -fsS "${BASE_URL:-http://localhost:8080}/jobs/${JOB_ID}/status" | jq .
+        ./scripts/task-log.sh "{{.TASK}}" -- bash -c 'set -euo pipefail; 
+          test -n "${JOB_ID:-}" || (echo "JOB_ID is required" >&2; exit 1)
+          curl -fsS "${BASE_URL:-http://localhost:8080}/jobs/${JOB_ID}/status" | jq -C .'
 
   api:result:
     desc: "Get job result. Usage: task api:result JOB_ID=<id>"
     cmds:
       - |
-        test -n "${JOB_ID:-}" || (echo "JOB_ID is required" >&2; exit 1)
-        curl -fsS "${BASE_URL:-http://localhost:8080}/jobs/${JOB_ID}/result" | jq .
+        ./scripts/task-log.sh "{{.TASK}}" -- bash -c 'set -euo pipefail; 
+          test -n "${JOB_ID:-}" || (echo "JOB_ID is required" >&2; exit 1)
+          curl -fsS "${BASE_URL:-http://localhost:8080}/jobs/${JOB_ID}/result" | jq -C .'
 
   api:inspect:
     desc: "Submit a job, poll it, and print the final result. Usage: task api:inspect HOSTNAME=example.com"
     cmds:
-      - ./scripts/api-inspect.sh
+      - ./scripts/task-log.sh "{{.TASK}}" -- ./scripts/api-inspect.sh
 
   scenario:validation:
     desc: "API scenario: invalid hostname returns HTTP 400"
     cmds:
-      - ./scripts/scenario.sh validation
+      - ./scripts/task-log.sh "{{.TASK}}" -- ./scripts/scenario.sh validation
 
   scenario:idempotency:
     desc: "API scenario: duplicate idempotency key returns the existing job"
     cmds:
-      - ./scripts/scenario.sh idempotency
+      - ./scripts/task-log.sh "{{.TASK}}" -- ./scripts/scenario.sh idempotency
 
   scenario:result-before-completion:
     desc: "API scenario: result endpoint returns HTTP 409 before completion"
     cmds:
-      - ./scripts/scenario.sh result-before-completion
+      - ./scripts/task-log.sh "{{.TASK}}" -- ./scripts/scenario.sh result-before-completion
 
   scenario:network-failure:
     desc: "API scenario: DNS/network failure is stored as a failed job"
     cmds:
-      - ./scripts/scenario.sh network-failure
+      - ./scripts/task-log.sh "{{.TASK}}" -- ./scripts/scenario.sh network-failure
 
   scenario:timeout:
     desc: "API scenario: timeout host is retried and then stored as a failed job"
     cmds:
-      - ./scripts/scenario.sh timeout
+      - ./scripts/task-log.sh "{{.TASK}}" -- ./scripts/scenario.sh timeout
 
   scenario:edge-cases:
     desc: Run API edge-case scenarios against the local service
@@ -208,21 +237,21 @@ tasks:
       - |
         query="${QUERY:-jobs_submitted_total}"
         curl -G -fsS "${PROM_URL:-http://localhost:9090}/api/v1/query" \
-          --data-urlencode "query=${query}" | jq .
+          --data-urlencode "query=${query}" | jq -C .
 
   prom:jobs:
     desc: Query job counters and queue gauges from Prometheus
     cmds:
       - |
         curl -G -fsS "${PROM_URL:-http://localhost:9090}/api/v1/query" \
-          --data-urlencode 'query={__name__=~"jobs_submitted_total|jobs_processed_total|jobs_retried_total|jobs_in_progress|job_queue_depth"}' | jq .
+          --data-urlencode 'query={__name__=~"jobs_submitted_total|jobs_processed_total|jobs_retried_total|jobs_in_progress|job_queue_depth"}' | jq -C .
 
   prom:errors:
     desc: Query total HTTP 4xx/5xx errors from Prometheus
     cmds:
       - |
         curl -G -fsS "${PROM_URL:-http://localhost:9090}/api/v1/query" \
-          --data-urlencode 'query=sum(http_requests_total{status=~"4..|5.."})' | jq .
+          --data-urlencode 'query=sum(http_requests_total{status=~"4..|5.."})' | jq -C .
 
   prom:latency:
     desc: Query HTTP and certificate inspection p95 latencies from Prometheus
@@ -230,23 +259,23 @@ tasks:
       - |
         echo "HTTP p95"
         curl -G -fsS "${PROM_URL:-http://localhost:9090}/api/v1/query" \
-          --data-urlencode 'query=histogram_quantile(0.95, sum by (le, method, path) (rate(http_request_duration_seconds_bucket[5m])))' | jq .
+          --data-urlencode 'query=histogram_quantile(0.95, sum by (le, method, path) (rate(http_request_duration_seconds_bucket[5m])))' | jq -C .
         echo
         echo "Certificate inspection p95"
         curl -G -fsS "${PROM_URL:-http://localhost:9090}/api/v1/query" \
-          --data-urlencode 'query=histogram_quantile(0.95, sum by (le) (rate(certificate_inspection_duration_seconds_bucket[5m])))' | jq .
+          --data-urlencode 'query=histogram_quantile(0.95, sum by (le) (rate(certificate_inspection_duration_seconds_bucket[5m])))' | jq -C .
 
   demo:
     desc: Exercise the API with one or more hostnames
     cmds:
-      - ./scripts/demo.sh
+      - ./scripts/task-log.sh "{{.TASK}}" -- ./scripts/demo.sh
 
   demo-batch:
     desc: Exercise the API with a batch that includes success and failure cases
     cmds:
-      - HOSTNAMES="example.com|github.com|expired.badssl.com" ./scripts/demo.sh
+      - ./scripts/task-log.sh "{{.TASK}}" -- bash -c 'set -euo pipefail; HOSTNAMES="example.com|github.com|expired.badssl.com" ./scripts/demo.sh'
 
   demo-big-batch:
     desc: Exercise the API with a larger hostname batch to make queue metrics easier to see
     cmds:
-      - HOSTNAMES="example.com|github.com|gitlab.com|google.com|cloudflare.com|letsencrypt.org|prometheus.io|grafana.com|golang.org|docker.com|kubernetes.io|sqlite.org|ietf.org|wikipedia.org|mozilla.org|expired.badssl.com|wrong.host.badssl.com|self-signed.badssl.com" ./scripts/demo.sh
+      - ./scripts/task-log.sh "{{.TASK}}" -- bash -c 'set -euo pipefail; HOSTNAMES="example.com|github.com|gitlab.com|google.com|cloudflare.com|letsencrypt.org|prometheus.io|grafana.com|golang.org|docker.com|kubernetes.io|sqlite.org|ietf.org|wikipedia.org|mozilla.org|expired.badssl.com|wrong.host.badssl.com|self-signed.badssl.com" ./scripts/demo.sh'

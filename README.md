@@ -41,6 +41,30 @@ The API listens on `http://localhost:8080`.
 
 The Docker Compose stack sets a small `WORKER_JOB_DELAY` to make queue and in-progress metrics visible during local demos. The default outside Compose is no artificial delay.
 
+## Task Logs
+
+Certificate inspection workflows print to the terminal and also write a per-run log directory:
+
+```txt
+logs/<utc-timestamp>-<task-name>-<pid>/
+```
+
+Each run contains:
+
+- `output.log`: combined command output in plain text
+- `output.jsonl`: one JSON object per output line
+- `metadata.json`: task name, command, timestamps, duration, status, and exit code
+
+Logged tasks are the API job workflows, scenarios, and demos. Build, test, Docker, database, health, readiness, metrics, and Prometheus helper tasks are not persisted as task logs.
+
+Set `TASK_LOG_DIR=/path/to/logs` to write task logs somewhere else.
+
+Clean local task logs with confirmation:
+
+```bash
+task logs:clean
+```
+
 ## Exercise the API
 
 ```bash

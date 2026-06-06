@@ -8,7 +8,7 @@ RUN_ID="$(date +%s)-$$"
 IFS='|' read -r -a HOSTNAME_LIST <<< "${HOSTNAMES}"
 
 print_json() {
-  printf '%s\n' "$1" | jq .
+  printf '%s\n' "$1" | jq -C .
 }
 
 if [ "${#HOSTNAME_LIST[@]}" -eq 0 ]; then
@@ -93,7 +93,7 @@ for index in "${!JOB_IDS[@]}"; do
   job_id="${JOB_IDS[index]}"
   hostname="${JOB_HOSTNAMES[index]}"
   echo "${hostname}:"
-  curl -sS "${BASE_URL}/jobs/${job_id}/result" | jq . || true
+  curl -sS "${BASE_URL}/jobs/${job_id}/result" | jq -C . || true
   echo
 done
 
@@ -101,14 +101,14 @@ echo
 echo "Submitting invalid hostname"
 curl -sS -X POST "${BASE_URL}/jobs" \
   -H 'Content-Type: application/json' \
-  -d '{"hostname":"https://bad.example","port":443}' | jq . || true
+  -d '{"hostname":"https://bad.example","port":443}' | jq -C . || true
 echo
 
 echo
 echo "Submitting duplicate idempotency key"
 curl -fsS -X POST "${BASE_URL}/jobs" \
   -H 'Content-Type: application/json' \
-  -d "{\"hostname\":\"${FIRST_HOSTNAME}\",\"port\":443,\"idempotency_key\":\"${FIRST_IDEMPOTENCY_KEY}\"}" | jq .
+  -d "{\"hostname\":\"${FIRST_HOSTNAME}\",\"port\":443,\"idempotency_key\":\"${FIRST_IDEMPOTENCY_KEY}\"}" | jq -C .
 echo
 
 echo

@@ -11,4 +11,5 @@ TOREAD.md
 /*.db-shm
 /*.db-wal
 /data/
+/logs/
 /coverage.out
